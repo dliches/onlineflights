@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Family Flight Tracker</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Supabase + GitHub Pages</p>
+      <h1>Family Flight Tracker</h1>
+      <p class="hero-copy">Separate flight logs for Daniel, Lidia, David and Alvaro. Flights are saved online in Supabase.</p>
+      <p id="databaseStatus" class="status-pill">Checking database...</p>
+    </div>
+    <label class="traveller-picker">Traveller
+      <select id="travellerSelect" aria-label="Traveller selector"></select>
+    </label>
+  </header>
+
+  <main>
+    <nav class="tabs" aria-label="Main pages">
+      <button class="tab active" data-tab="flightdata">Flightdata</button>
+      <button class="tab" data-tab="statistics">Statistics</button>
+      <button class="tab" data-tab="routes">Route map</button>
+      <button class="tab" data-tab="countries">Visited countries</button>
+      <button class="tab" data-tab="setup">Setup</button>
+    </nav>
+
+    <section id="flightdata" class="panel active-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Flightdata</h2>
+          <p id="flightCountText">Loading flights...</p>
+        </div>
+        <div class="button-row">
+          <button id="addFlightBtn" class="primary">Add flight</button>
+          <button id="refreshBtn">Refresh</button>
+          <button id="exportCsvBtn">Export CSV</button>
+        </div>
+      </div>
+
+      <div id="importNotice" class="notice hidden">
+        <div>
+          <strong>Daniel has no flights in Supabase yet.</strong>
+          <p>Click the button once to import the 448 flights from the bundled Excel seed file into your Supabase database.</p>
+        </div>
+        <button id="importDanielBtn" class="primary">Import Daniel's 448 flights</button>
+      </div>
+
+      <div class="toolbar">
+        <label>Search flights
+          <input id="searchInput" type="search" placeholder="Airport, airline, route..." />
+        </label>
+        <span class="hint">New flights only need origin, destination, airline, class and purpose. Distance and duration are calculated automatically.</span>
+      </div>
+      <div class="table-wrap">
+        <table id="flightsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Airline</th>
+              <th>Class</th>
+              <th>Purpose</th>
+              <th>Distance</th>
+              <th>Duration</th>
+              <th>Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="statistics" class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Statistics</h2>
+          <p id="statsSubhead">Calculated from the selected traveller's flights.</p>
+        </div>
+      </div>
+      <div id="kpiGrid" class="kpi-grid"></div>
+      <div class="stats-grid">
+        <article class="card"><h3>Flights Distance</h3><div id="distanceStats" class="stat-list"></div></article>
+        <article class="card"><h3>Flight Time</h3><div id="timeStats" class="stat-list"></div></article>
+        <article class="card"><h3>Number of Flights</h3><div id="countStats" class="stat-list"></div></article>
+        <article class="card"><h3>Additional Data</h3><div id="additionalStats" class="stat-list"></div></article>
+      </div>
+      <article class="card full"><h3>Flight Extremes</h3><div id="extremeStats" class="extremes"></div></article>
+      <div class="stats-grid three">
+        <article class="card"><h3>Top Ten Airports</h3><div id="topAirports"></div></article>
+        <article class="card"><h3>Top Ten Airlines</h3><div id="topAirlines"></div></article>
+        <article class="card"><h3>Top Ten Routes</h3><div id="topRoutes"></div></article>
+      </div>
+      <div class="stats-grid two">
+        <article class="card"><h3>Seat Classes</h3><canvas id="classChart" width="360" height="230"></canvas><div id="classLegend" class="legend"></div></article>
+        <article class="card"><h3>Flight Purpose</h3><canvas id="purposeChart" width="360" height="230"></canvas><div id="purposeLegend" class="legend"></div></article>
+      </div>
+    </section>
+
+    <section id="routes" class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Route map</h2>
+          <p>Every flight for the selected traveller is drawn as a route line.</p>
+        </div>
+      </div>
+      <div id="routeMap" class="map"></div>
+      <p id="routeMapFallback" class="map-fallback"></p>
+    </section>
+
+    <section id="countries" class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Visited countries</h2>
+          <p>Countries are detected from origin and destination airports.</p>
+        </div>
+      </div>
+      <div id="countriesMap" class="map"></div>
+      <p id="countryMapFallback" class="map-fallback"></p>
+      <div id="countryList" class="country-list"></div>
+    </section>
+
+    <section id="setup" class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Setup</h2>
+          <p>Use this page only when starting from a new Supabase database.</p>
+        </div>
+      </div>
+      <article class="card setup-card">
+        <h3>Database status</h3>
+        <div id="setupStatus" class="stat-list"></div>
+        <div class="button-row left">
+          <button id="testDbBtn">Test database connection</button>
+          <button id="importDanielSetupBtn" class="primary">Import Daniel's 448 flights</button>
+        </div>
+        <p class="hint">Run <code>sql/supabase-setup.sql</code> inside Supabase first. Then import Daniel's flights once. Add/edit/delete actions will save directly to Supabase.</p>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="flightDialog">
+    <form id="flightForm" method="dialog" class="dialog-card">
+      <div class="dialog-head">
+        <h2 id="dialogTitle">Add flight</h2>
+        <button type="button" id="closeDialogBtn" class="icon-btn" aria-label="Close">×</button>
+      </div>
+      <p class="hint">No date is stored. Imported Excel flights keep their original distance and duration. New/edited routes are estimated automatically.</p>
+      <div class="form-grid">
+        <label>From airport code<input id="fromInput" name="from" maxlength="3" placeholder="LHR" required /></label>
+        <label>To airport code<input id="toInput" name="to" maxlength="3" placeholder="VLC" required /></label>
+        <label class="wide">Airline<input id="airlineInput" name="airline" placeholder="British Airways" required /></label>
+        <label>Seat class<select id="seatClassInput" name="seatClass"><option>Economy</option><option>Economy Plus</option><option>Business</option><option>First</option></select></label>
+        <label>Purpose<select id="purposeInput" name="purpose"><option>Personal</option><option>Business</option></select></label>
+      </div>
+      <div id="formError" class="form-error" role="alert"></div>
+      <div class="dialog-actions">
+        <button type="button" id="cancelBtn">Cancel</button>
+        <button type="submit" class="primary">Save flight online</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
